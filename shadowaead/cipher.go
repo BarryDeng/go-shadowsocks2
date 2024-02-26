@@ -8,6 +8,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/zhigui-projects/gm-go/sm4"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 )
@@ -66,6 +67,14 @@ func aesGCM(key []byte) (cipher.AEAD, error) {
 	return cipher.NewGCM(blk)
 }
 
+func sm4GCM(key []byte) (cipher.AEAD, error) {
+	blk, err := sm4.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewGCM(blk)
+}
+
 // AESGCM creates a new Cipher with a pre-shared key. len(psk) must be
 // one of 16, 24, or 32 to select AES-128/196/256-GCM.
 func AESGCM(psk []byte) (Cipher, error) {
@@ -77,6 +86,15 @@ func AESGCM(psk []byte) (Cipher, error) {
 	return &metaCipher{psk: psk, makeAEAD: aesGCM}, nil
 }
 
+func SM4GCM(psk []byte) (Cipher, error) {
+	switch l := len(psk); l {
+	case 16: // SM4 128
+	default:
+		return nil, sm4.KeySizeError(l)
+	}
+	return &metaCipher{psk: psk, makeAEAD: sm4GCM}, nil
+}
+
 // Chacha20Poly1305 creates a new Cipher with a pre-shared key. len(psk)
 // must be 32.
 func Chacha20Poly1305(psk []byte) (Cipher, error) {
@@ -84,4 +102,13 @@ func Chacha20Poly1305(psk []byte) (Cipher, error) {
 		return nil, KeySizeError(chacha20poly1305.KeySize)
 	}
 	return &metaCipher{psk: psk, makeAEAD: chacha20poly1305.New}, nil
+}
+
+// XChacha20Poly1305 creates a new Cipher with a pre-shared key. len(psk)
+// must be 32.
+func XChacha20Poly1305(psk []byte) (Cipher, error) {
+	if len(psk) != chacha20poly1305.KeySize {
+		return nil, KeySizeError(chacha20poly1305.KeySize)
+	}
+	return &metaCipher{psk: psk, makeAEAD: chacha20poly1305.NewX}, nil
 }
