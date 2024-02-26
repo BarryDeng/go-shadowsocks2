@@ -8,7 +8,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/Potterli20/go-shadowsocks2/internal"
+	"github.com/BarryDeng/go-shadowsocks2/internal"
 )
 
 const (
